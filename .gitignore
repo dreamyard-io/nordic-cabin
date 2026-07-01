@@ -1,0 +1,10 @@
+# Dependencies
+node_modules
+
+# Build output (deployed to the gh-pages branch, not tracked on main)
+dist
+
+# Local tooling / OS junk
+.claude
+.DS_Store
+*.log

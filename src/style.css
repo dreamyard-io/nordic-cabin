@@ -1,0 +1,962 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ============================================================
+   Design tokens — single source of truth for spacing & layout
+   ============================================================ */
+:root {
+  /* Layout */
+  --content: 1100px; /* default text/content column width */
+  --gutter: 2.5rem; /* horizontal page padding (side gutters) */
+  --section-y: 160px; /* vertical padding / rhythm between sections */
+
+  /* Vertical rhythm between elements (small → large) */
+  --space-1: 0.9rem; /* label → text */
+  --space-2: 1.5rem; /* eyebrow → title */
+  --space-3: 2rem; /* title → body copy */
+  --space-4: 4rem; /* body → sub-block (cols / stats) */
+  --space-5: 6rem; /* section head → content rows */
+
+  /* Motion — one convention across the whole site.
+     --ease is easeOutCubic, the CSS twin of GSAP "power2.out" used by the
+     JS entrance reveals, so transitions and reveals share the same curve. */
+  --ease: cubic-bezier(0.33, 1, 0.68, 1);
+  --dur-hover: 0.2s; /* color / opacity micro-interactions */
+  --dur-ui: 0.3s; /* UI state changes (menu, button, hamburger) */
+
+  /* Shared dark background for the Location + Book block — one source so the
+     two sections stay identical and seam together. Cool blue-charcoal to match
+     the night fjord photography. */
+  --dark: #0d1218;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --gutter: 1.25rem;
+    --section-y: 100px;
+    --space-5: 3.5rem;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Anti-flash: hide elements that have a JS entrance (hero intro + heading
+   line-masks) before that JS runs. Only applies when JS is available (.js),
+   so a no-JS page stays fully visible. */
+.js .nav,
+.js .hero__title,
+.js .hero__lede,
+.js .cabin__title {
+  opacity: 0;
+}
+
+/* Image clip reveals — hidden (clipped + slightly scaled) until JS adds
+   .is-revealed when the frame scrolls in. CSS-driven so clip-path interpolates
+   reliably in every browser. .js-gated so a no-JS page shows them normally. */
+.js .gallery__item img,
+.js .row__media img,
+.js .location__image img {
+  clip-path: inset(100% 0 0 0);
+  transform: scale(1.06);
+  transition: clip-path 1s var(--ease), transform 1.2s var(--ease);
+}
+
+.js .gallery__item img.is-revealed,
+.js .row__media img.is-revealed,
+.js .location__image img.is-revealed {
+  clip-path: inset(0 0 0 0);
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js .gallery__item img,
+  .js .row__media img,
+  .js .location__image img {
+    clip-path: none;
+    transform: none;
+    transition: none;
+  }
+}
+
+body {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  background: #0b0b0f;
+  color: #f5f5f7;
+}
+
+/* Tall scroll section that drives the scrub */
+.scrub {
+  position: relative;
+  height: 300vh;
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+#hero {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ---- Legibility scrims (top + bottom dark gradients) ---- */
+.scrim {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.scrim--top {
+  top: 0;
+  height: 28vh;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.55),
+    rgba(0, 0, 0, 0)
+  );
+}
+
+.scrim--bottom {
+  bottom: 0;
+  height: 45vh;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.6),
+    rgba(0, 0, 0, 0)
+  );
+}
+
+/* ---- (1) Top navigation ---- */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.6rem var(--gutter);
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Over light sections: dark text, no legibility shadow */
+.nav--on-light {
+  color: #1a1a1a;
+  text-shadow: none;
+}
+
+.nav--on-light .nav__toggle span {
+  background: #1a1a1a;
+  box-shadow: none;
+}
+
+.nav__wordmark {
+  font-weight: 400;
+  font-size: 0.8rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: inherit;
+  text-decoration: none;
+}
+
+.nav__menu {
+  display: flex;
+  gap: 1.75rem;
+  list-style: none;
+}
+
+.nav__menu a {
+  position: relative;
+  font-weight: 300;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.85;
+  transition: opacity var(--dur-hover) var(--ease);
+}
+
+/* Animated underline — draws on hover and marks the active section */
+.nav__menu a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -5px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-ui) var(--ease);
+}
+
+.nav__menu a:hover {
+  opacity: 1;
+}
+
+.nav__menu a:hover::after,
+.nav__menu a.is-active::after {
+  transform: scaleX(1);
+}
+
+.nav__menu a.is-active {
+  opacity: 1;
+}
+
+/* Hamburger toggle — hidden on desktop, shown on mobile */
+.nav__toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  z-index: 4;
+}
+
+.nav__toggle span {
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: transform var(--dur-ui) var(--ease), opacity var(--dur-hover) var(--ease);
+}
+
+/* Animate to an X when open */
+.nav.is-open .nav__toggle span:first-child {
+  transform: translateY(3.5px) rotate(45deg);
+}
+
+.nav.is-open .nav__toggle span:last-child {
+  transform: translateY(-3.5px) rotate(-45deg);
+}
+
+/* ---- (2 + 3) Hero copy ---- */
+.hero {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 0 var(--gutter) 3.5rem;
+  pointer-events: none; /* never blocks scroll */
+  color: #fff;
+}
+
+.hero__title {
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-weight: 300;
+  font-size: clamp(2.5rem, 7vw, 6rem);
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+}
+
+.hero__lede {
+  margin-top: var(--space-2);
+  max-width: 46ch;
+  font-weight: 300;
+  font-size: clamp(0.95rem, 1.4vw, 1.15rem);
+  line-height: 1.6;
+  opacity: 0.92;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* ---- "The Cabin" section (normal document flow, below sticky video) ---- */
+.cabin {
+  background: #f5f3ef;
+  color: #1a1a1a;
+  padding: var(--section-y) var(--gutter);
+}
+
+.cabin__inner {
+  max-width: var(--content);
+  margin: 0 auto;
+}
+
+.cabin__eyebrow {
+  font-weight: 400;
+  font-size: 0.75rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #8a8276;
+}
+
+.cabin__title {
+  margin-top: var(--space-2);
+  max-width: 18ch;
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-weight: 300;
+  font-size: clamp(2.7rem, 6.2vw, 4.9rem);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+}
+
+/* SplitText line-mask wrappers: give descenders (g, p, y) room without
+   loosening the line spacing. padding-bottom enlarges the clip box (works in
+   every browser, unlike overflow-clip-margin which Safari ignores); the
+   matching negative margin pulls the next line back up so spacing is unchanged. */
+.cabin__title > div,
+.hero__title > div {
+  padding-bottom: 0.5em;
+  margin-bottom: -0.5em;
+}
+
+.cabin__lede {
+  margin-top: var(--space-3);
+  max-width: 60ch;
+  font-weight: 300;
+  font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+  line-height: 1.7;
+  color: #3a3a36;
+}
+
+.cabin__cols {
+  margin-top: var(--space-4);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3rem;
+}
+
+.cabin__col h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cabin__col p {
+  margin-top: var(--space-1);
+  font-weight: 300;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: #4a4a45;
+}
+
+/* ---- Gallery — part of The Cabin: two images, wide, with parallax ---- */
+.gallery__inner {
+  /* Wider than the cabin text column; breaks out past .cabin__inner's width.
+     margin-top separates it from the copy above; the section's own bottom
+     padding provides the gap to the next section. */
+  max-width: 1760px;
+  margin: var(--space-5) auto 0;
+  display: grid;
+  /* second column a touch wider → cabin-2 is a bit larger */
+  grid-template-columns: 1fr 1.18fr;
+  align-items: center; /* let each item keep its own height */
+  gap: 2.5rem;
+}
+
+.gallery__item {
+  background: #e6e2da; /* placeholder tone, shows even before an image loads */
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+/* Parallax frame: the media sits taller than the item so it can drift inside */
+.gallery__media {
+  position: relative;
+  top: -15%;
+  width: 100%;
+  height: 130%;
+  will-change: transform;
+}
+
+.gallery__item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---- "Interior" section ---- */
+.interior {
+  background: #f5f3ef;
+  color: #1a1a1a;
+  padding: 0 var(--gutter) var(--section-y);
+}
+
+.interior__inner {
+  max-width: var(--content);
+  margin: 0 auto;
+}
+
+.interior__head {
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* Width relative to the title's own (large) font so it breaks onto 2 lines */
+.interior__head .cabin__title {
+  max-width: 16ch;
+  margin-inline: auto;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* image gets twice the width of the text */
+  align-items: center;
+  gap: 4rem;
+  /* Single-source vertical rhythm: every block (head→row, row→row) is one
+     --space-5 gap, instead of the old head-margin + row-padding double-up. */
+  margin-top: var(--space-5);
+}
+
+/* Alternate: image on the right — flip the wide column to the right side */
+.row--reverse {
+  grid-template-columns: 1fr 2fr;
+}
+
+.row--reverse .row__media {
+  order: 2;
+}
+
+/* Clip the image so its reveal scale never bleeds past the frame */
+.row__media {
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.row__media img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.row__title {
+  margin-top: var(--space-2);
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-weight: 300;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.row__body {
+  margin-top: var(--space-2);
+  max-width: 46ch;
+  font-weight: 300;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: #4a4a45;
+}
+
+/* ---- "Location" section (dark) ---- */
+.location {
+  background: var(--dark);
+  color: #edeae0;
+  padding: var(--section-y) 0;
+}
+
+.location__inner {
+  max-width: var(--content);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.location__lede {
+  margin-top: var(--space-3);
+  max-width: 44ch;
+  font-weight: 300;
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  line-height: 1.7;
+  color: #c9c5b8;
+}
+
+.location__stats {
+  margin-top: var(--space-4);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem;
+}
+
+.loc-stat__num {
+  display: block;
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-weight: 300;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.loc-stat__label {
+  margin-top: var(--space-1);
+  font-weight: 300;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #9c988b;
+}
+
+/* ---- Location image (matches the text component's width) ---- */
+.location__image {
+  max-width: var(--content);
+  margin: var(--space-5) auto 0;
+  padding: 0 var(--gutter);
+}
+
+/* Clip the image so its reveal scale never bleeds into the gutter */
+.location__frame {
+  overflow: hidden;
+}
+
+.location__image img {
+  display: block;
+  width: 100%;
+  height: 65vh;
+  max-height: 640px;
+  object-fit: cover;
+  /* sharp corners, consistent with the rest of the site */
+}
+
+/* ---- "Book" section (continues the dark block from Location) ---- */
+.book {
+  background: var(--dark);
+  color: #edeae0;
+  /* Follower of Location: the top gap comes from Location's bottom padding,
+     so the dark block keeps the same single section rhythm as the light one. */
+  padding: 0 var(--gutter) 64px;
+}
+
+.book__inner {
+  max-width: 720px; /* intentionally narrower for the centered CTA */
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* Centre the title block within the centred CTA column (cabin__title's
+   max-width would otherwise leave it left-aligned) */
+.book__title {
+  margin-inline: auto;
+}
+
+.book__lede {
+  margin: var(--space-3) auto 0;
+  max-width: 520px;
+  font-weight: 300;
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  line-height: 1.7;
+  color: #b7b3a6;
+}
+
+.book__btn {
+  display: inline-block;
+  margin-top: var(--space-4);
+  padding: 1rem 2.25rem;
+  border: 1px solid rgba(237, 234, 224, 0.55);
+  background: transparent;
+  color: #edeae0;
+  font-size: 0.78rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background-color var(--dur-ui) var(--ease),
+    color var(--dur-ui) var(--ease), border-color var(--dur-ui) var(--ease);
+}
+
+.book__btn:hover {
+  background: #edeae0;
+  color: var(--dark);
+  border-color: #edeae0;
+}
+
+.book__direct {
+  margin-top: var(--space-2);
+  font-weight: 300;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  color: #8a8678;
+}
+
+.book__direct a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--dur-hover) var(--ease);
+}
+
+.book__direct a:hover {
+  color: #edeae0;
+}
+
+/* ---- Footer ---- */
+.footer {
+  max-width: var(--content);
+  margin: var(--space-5) auto 0;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(237, 234, 224, 0.12);
+}
+
+.footer__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.footer__wordmark {
+  font-size: 0.78rem;
+  font-weight: 400;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #edeae0;
+  text-decoration: none;
+}
+
+.footer__links {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  color: #8a8678;
+}
+
+.footer__links a {
+  font-size: 0.72rem;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #b7b3a6;
+  text-decoration: none;
+  transition: color var(--dur-hover) var(--ease);
+}
+
+.footer__links a:hover {
+  color: #edeae0;
+}
+
+.footer__meta {
+  font-size: 0.72rem;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  color: #8a8678;
+}
+
+.footer__copy {
+  margin-top: var(--space-2);
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  color: #6f6c60;
+}
+
+/* ============================================================
+   Responsive — layout changes at 860px, spacing tokens at 640px
+   ============================================================ */
+@media (max-width: 860px) {
+  .location__stats {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+
+  .location__image {
+    margin-top: var(--space-4); /* smaller gap before the image on tablet */
+  }
+
+  .location__image img {
+    height: 48vh;
+    max-height: 420px;
+  }
+
+  .cabin__cols {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .row,
+  .row--reverse {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+  }
+
+  /* Image always on top on mobile */
+  .row--reverse .row__media {
+    order: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Section vertical padding and gutters already shrink via the :root tokens. */
+  .gallery__inner {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .book {
+    padding-bottom: 48px;
+  }
+
+  .footer {
+    margin-top: 4.5rem;
+  }
+
+  /* Footer stacks vertically on mobile */
+  .footer__top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+
+  .footer__links {
+    flex-wrap: wrap;
+  }
+
+  .nav {
+    padding: 1.1rem var(--gutter);
+  }
+
+  .nav__wordmark {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+  }
+
+  .nav__toggle {
+    display: flex;
+  }
+
+  /* Collapse the text menu into a dropdown panel toggled by the hamburger */
+  .nav__menu {
+    position: absolute;
+    top: 100%;
+    right: 1.25rem;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1.25rem;
+    padding: 1.5rem 0;
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition: opacity var(--dur-ui) var(--ease), transform var(--dur-ui) var(--ease);
+  }
+
+  .nav.is-open .nav__menu {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .nav__menu a {
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+  }
+
+  .hero {
+    padding: 0 var(--gutter) 2.5rem;
+  }
+
+  .hero__lede {
+    margin-top: 1rem;
+  }
+}
+
+/* ============================================================
+   Intro preloader — covers the page while it loads, then lifts
+   ============================================================ */
+.preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 11000;
+  display: none; /* only shown when JS is available */
+  align-items: center;
+  justify-content: center;
+  background: var(--dark);
+  color: #edeae0;
+}
+
+.js .preloader {
+  display: flex;
+  /* Failsafe: if the JS intro never removes it, hide it anyway after 7s */
+  animation: preloadFailsafe 0.4s linear 7s forwards;
+}
+
+@keyframes preloadFailsafe {
+  to {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+.preloader__word {
+  /* Same font + uppercase + tracking as the navbar wordmark, just larger */
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-weight: 400;
+  font-size: clamp(1rem, 2.8vw, 1.6rem);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  text-indent: 0.28em; /* compensate the trailing tracking so it stays centred */
+  opacity: 0; /* faded in by JS */
+}
+
+.preloader__count {
+  position: absolute;
+  right: var(--gutter);
+  bottom: var(--gutter);
+  font-family: "Inter", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 300;
+  letter-spacing: 0.12em;
+  color: #8a8678;
+}
+
+.preloader__bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: #edeae0;
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+/* ============================================================
+   Film grain overlay — subtle, animated, over the whole site
+   ============================================================ */
+.grain {
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.055;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+  will-change: transform;
+  animation: grain 0.7s steps(5) infinite;
+}
+
+/* Classic film-grain jitter — shifts the texture a few times a second */
+@keyframes grain {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  10% {
+    transform: translate(-4%, -4%);
+  }
+  20% {
+    transform: translate(-8%, 4%);
+  }
+  30% {
+    transform: translate(4%, -8%);
+  }
+  40% {
+    transform: translate(-4%, 8%);
+  }
+  50% {
+    transform: translate(-8%, 4%);
+  }
+  60% {
+    transform: translate(8%, 0);
+  }
+  70% {
+    transform: translate(0, 8%);
+  }
+  80% {
+    transform: translate(4%, -4%);
+  }
+  90% {
+    transform: translate(-4%, 4%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grain {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   Custom cursor — a dot that grows / shows a label on hover.
+   mix-blend-mode: difference keeps it visible on any background;
+   the label reads as a knockout of the background.
+   ============================================================ */
+.has-cursor,
+.has-cursor * {
+  cursor: none;
+}
+
+.cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid transparent;
+  pointer-events: none;
+  z-index: 10000;
+  opacity: 0;
+  mix-blend-mode: difference;
+  display: grid;
+  place-items: center;
+  will-change: transform;
+  transition: width 0.35s var(--ease), height 0.35s var(--ease),
+    background-color 0.35s var(--ease), border-color 0.35s var(--ease);
+}
+
+.cursor__label {
+  color: #000;
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.25s var(--ease);
+}
+
+/* Over links/buttons: open into a thin ring (doesn't cover the text) */
+.cursor.is-interactive {
+  width: 42px;
+  height: 42px;
+  background: transparent;
+  border-color: #fff;
+}
+
+/* Over the images: a filled disc with a knockout label */
+.cursor.has-label {
+  width: 92px;
+  height: 92px;
+  background: #fff;
+  border-color: transparent;
+}
+
+.cursor.has-label .cursor__label {
+  opacity: 1;
+}
+
+/* No custom cursor on touch / coarse pointers */
+@media (hover: none), (pointer: coarse) {
+  .cursor {
+    display: none;
+  }
+}
