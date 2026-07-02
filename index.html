@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,6 +9,14 @@
       document.documentElement.classList.add("js");
     </script>
     <title>Nordic Cabin</title>
+    <meta
+      name="description"
+      content="Nordic Cabin — a minimalist, off-grid retreat above a quiet Norwegian fjord, available for short stays."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230d1218'/%3E%3Cpath d='M6 20 16 9 26 20' fill='none' stroke='%23edeae0' stroke-width='2'/%3E%3C/svg%3E"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -97,7 +105,7 @@
           <div class="cabin__col">
             <h3>Footprint</h3>
             <p>
-              64 m² of considered space. One open living volume, one bedroom,
+              64 m² of considered space. One open living volume, two bedrooms,
               one bathroom. Nothing more.
             </p>
           </div>
@@ -111,16 +119,52 @@
         </div>
       </div>
 
-      <!-- Gallery — part of The Cabin: two images, the second larger, parallax -->
-      <div class="gallery__inner">
-        <div class="gallery__item">
-          <div class="gallery__media">
-            <img src="/cabin-1.png" alt="Nordic Cabin exterior" />
-          </div>
-        </div>
-        <div class="gallery__item">
-          <div class="gallery__media">
-            <img src="/cabin-2.png" alt="Nordic Cabin interior" />
+      <!-- Gallery — part of The Cabin: horizontal-scroll strip that pins mid-page
+           and pans sideways through 5 images (alternating small / large). Falls
+           back to native horizontal swipe on mobile / reduced motion. -->
+      <div class="hgal">
+        <div class="hgal__viewport">
+          <div class="hgal__track">
+            <figure class="hgal__item hgal__item--sm">
+              <img
+                src="/cabin-1.png"
+                alt="Nordic Cabin exterior"
+                loading="lazy"
+                decoding="async"
+              />
+            </figure>
+            <figure class="hgal__item hgal__item--lg">
+              <img
+                src="/cabin-2.png"
+                alt="Nordic Cabin interior"
+                loading="lazy"
+                decoding="async"
+              />
+            </figure>
+            <figure class="hgal__item hgal__item--sm">
+              <img
+              src="/detail-kitchen.png"
+              alt="The kitchen"
+              loading="lazy"
+              decoding="async"
+            />
+            </figure>
+            <figure class="hgal__item hgal__item--lg">
+              <img
+              src="/detail-bedroom.png"
+              alt="The bedroom"
+              loading="lazy"
+              decoding="async"
+            />
+            </figure>
+            <figure class="hgal__item hgal__item--sm">
+              <img
+              src="/detail-living.png"
+              alt="The living room"
+              loading="lazy"
+              decoding="async"
+            />
+            </figure>
           </div>
         </div>
       </div>
@@ -136,7 +180,12 @@
 
         <div class="row">
           <div class="row__media">
-            <img src="/detail-kitchen.png" alt="The kitchen" />
+            <img
+              src="/detail-kitchen.png"
+              alt="The kitchen"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
           <div class="row__text">
             <p class="cabin__eyebrow">The Kitchen</p>
@@ -151,7 +200,12 @@
 
         <div class="row row--reverse">
           <div class="row__media">
-            <img src="/detail-bedroom.png" alt="The bedroom" />
+            <img
+              src="/detail-bedroom.png"
+              alt="The bedroom"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
           <div class="row__text">
             <p class="cabin__eyebrow">The Bedroom</p>
@@ -166,7 +220,12 @@
 
         <div class="row">
           <div class="row__media">
-            <img src="/detail-living.png" alt="The living room" />
+            <img
+              src="/detail-living.png"
+              alt="The living room"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
           <div class="row__text">
             <p class="cabin__eyebrow">The Living Room</p>
@@ -177,10 +236,71 @@
             </p>
           </div>
         </div>
+
+        <!-- Why choose — value proposition + guest stats -->
+        <div class="why">
+          <div class="why__intro">
+            <h2 class="why__title">Why choose Nordic Cabin?</h2>
+            <div class="why__text">
+              <p>
+                Nordic Cabin is a single retreat above a quiet fjord in western
+                Norway — open to the light, and yours for as long as you stay.
+              </p>
+              <p>
+                Off the grid, but never without comfort. Solar power, a
+                wood-burning stove, and rainwater on tap. Everything you need to
+                slip away for a few days, and nothing you don't.
+              </p>
+              <p class="why__tagline">Easy to reach. Hard to leave.</p>
+            </div>
+          </div>
+
+          <div class="why__stats">
+            <div class="why__stat">
+              <p class="why__num">4+2</p>
+              <p class="why__label">Beds — two bedrooms + sofa</p>
+            </div>
+            <div class="why__stat">
+              <p class="why__num">64 <span class="why__unit">m²</span></p>
+              <p class="why__label">Total floor area</p>
+            </div>
+            <div class="why__stat">
+              <p class="why__num">40 <span class="why__unit">min</span></p>
+              <p class="why__label">To the nearest village</p>
+            </div>
+            <div class="why__stat">
+              <p class="why__num">100 <span class="why__unit">%</span></p>
+              <p class="why__label">Off the grid</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Large CTA closing the Interior section -->
+      <div class="interior__cta">
+        <a class="cta" href="#">Check Availability</a>
       </div>
     </section>
 
-    <!-- Location — dark section: copy, stats, and the fjord image -->
+    <!-- Expand — the fjord image grows to full-bleed on scroll, then hands off to Location -->
+    <section class="expand" aria-label="The setting">
+      <div class="expand__pin">
+        <div class="expand__frame">
+          <img
+            src="/fjord.png"
+            alt="Nordic Cabin on a granite shelf above the fjord"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+        <div class="expand__veil"></div>
+        <div class="expand__caption">
+          <h2 class="expand__title">Where the light never quite leaves</h2>
+        </div>
+      </div>
+    </section>
+
+    <!-- Location — dark section: copy, stats, and the house data + outline drawing -->
     <section class="location" id="location">
       <div class="location__inner">
         <p class="cabin__eyebrow">Location</p>
@@ -216,12 +336,34 @@
         </div>
       </div>
 
-      <!-- Location image (matches the text column width) -->
-      <div class="location__image">
-        <div class="location__frame">
+      <!-- Data + outline drawing: specs on the left, the house image bleeding to
+           the right edge and drifting in from the right on scroll -->
+      <div class="loc-feature">
+        <div class="loc-feature__data">
+          <div class="loc-data">
+            <p class="loc-data__group">The house</p>
+            <dl class="loc-data__list">
+              <div class="loc-data__row"><dt>Floor area</dt><dd>64 m²</dd></div>
+              <div class="loc-data__row"><dt>Sleeps</dt><dd>4 + 2</dd></div>
+              <div class="loc-data__row"><dt>Structure</dt><dd>Spruce &amp; glass</dd></div>
+              <div class="loc-data__row"><dt>Power</dt><dd>100% off-grid</dd></div>
+            </dl>
+          </div>
+          <div class="loc-data">
+            <p class="loc-data__group">The location</p>
+            <dl class="loc-data__list">
+              <div class="loc-data__row"><dt>Latitude</dt><dd>61° N</dd></div>
+              <div class="loc-data__row"><dt>Elevation</dt><dd>320 m</dd></div>
+              <div class="loc-data__row"><dt>Nearest village</dt><dd>40 min</dd></div>
+            </dl>
+          </div>
+        </div>
+        <div class="loc-feature__media">
           <img
-            src="/location.png"
-            alt="Nordic Cabin on a granite shelf above the fjord"
+            src="/cabin-outline.png"
+            alt="Line drawing of the cabin"
+            loading="lazy"
+            decoding="async"
           />
         </div>
       </div>
@@ -233,8 +375,9 @@
         <p class="cabin__eyebrow">Book</p>
         <h2 class="cabin__title book__title">Come for the silence</h2>
         <p class="book__lede">
-          Nordic Cabin sleeps two, with room for a third by the fire. Available
-          spring through late autumn, when the fjord is at its calmest.
+          Nordic Cabin sleeps four, with room for two more on the sofa by the
+          fire. Available spring through late autumn, when the fjord is at its
+          calmest.
         </p>
         <a class="book__btn" href="#">Check availability</a>
         <p class="book__direct">

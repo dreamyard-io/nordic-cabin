@@ -27,10 +27,17 @@
   --dur-hover: 0.2s; /* color / opacity micro-interactions */
   --dur-ui: 0.3s; /* UI state changes (menu, button, hamburger) */
 
-  /* Shared dark background for the Location + Book block — one source so the
-     two sections stay identical and seam together. Cool blue-charcoal to match
-     the night fjord photography. */
+  /* Core palette — single source for every surface/ink colour.
+     --dark: cool blue-charcoal shared by body, Location + Book and the expand
+             veil, so the dark block seams together with the night photography.
+     --light: warm paper tone of the light sections.
+     --ink:   near-black text/ink used on light sections.
+     --cream: warm off-white text used on dark sections.
+     (rgba() variants of these stay inline — they're alpha derivatives.) */
   --dark: #0d1218;
+  --light: #f5f3ef;
+  --ink: #1a1a1a;
+  --cream: #edeae0;
 }
 
 @media (max-width: 640px) {
@@ -41,9 +48,8 @@
   }
 }
 
-html {
-  scroll-behavior: smooth;
-}
+/* (No CSS smooth-scrolling: Lenis drives scrolling when motion is allowed, and
+   reduced-motion users should get instant native jumps.) */
 
 /* Anti-flash: hide elements that have a JS entrance (hero intro + heading
    line-masks) before that JS runs. Only applies when JS is available (.js),
@@ -51,32 +57,27 @@ html {
 .js .nav,
 .js .hero__title,
 .js .hero__lede,
-.js .cabin__title {
+.js .cabin__title,
+.js .expand__title {
   opacity: 0;
 }
 
 /* Image clip reveals — hidden (clipped + slightly scaled) until JS adds
    .is-revealed when the frame scrolls in. CSS-driven so clip-path interpolates
    reliably in every browser. .js-gated so a no-JS page shows them normally. */
-.js .gallery__item img,
-.js .row__media img,
-.js .location__image img {
+.js .row__media img {
   clip-path: inset(100% 0 0 0);
   transform: scale(1.06);
   transition: clip-path 1s var(--ease), transform 1.2s var(--ease);
 }
 
-.js .gallery__item img.is-revealed,
-.js .row__media img.is-revealed,
-.js .location__image img.is-revealed {
+.js .row__media img.is-revealed {
   clip-path: inset(0 0 0 0);
   transform: scale(1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .js .gallery__item img,
-  .js .row__media img,
-  .js .location__image img {
+  .js .row__media img {
     clip-path: none;
     transform: none;
     transition: none;
@@ -85,8 +86,8 @@ html {
 
 body {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
-  background: #0b0b0f;
-  color: #f5f5f7;
+  background: var(--dark);
+  color: var(--cream);
 }
 
 /* Tall scroll section that drives the scrub */
@@ -156,12 +157,12 @@ body {
 
 /* Over light sections: dark text, no legibility shadow */
 .nav--on-light {
-  color: #1a1a1a;
+  color: var(--ink);
   text-shadow: none;
 }
 
 .nav--on-light .nav__toggle span {
-  background: #1a1a1a;
+  background: var(--ink);
   box-shadow: none;
 }
 
@@ -285,8 +286,8 @@ body {
 
 /* ---- "The Cabin" section (normal document flow, below sticky video) ---- */
 .cabin {
-  background: #f5f3ef;
-  color: #1a1a1a;
+  background: var(--light);
+  color: var(--ink);
   padding: var(--section-y) var(--gutter);
 }
 
@@ -318,7 +319,8 @@ body {
    every browser, unlike overflow-clip-margin which Safari ignores); the
    matching negative margin pulls the next line back up so spacing is unchanged. */
 .cabin__title > div,
-.hero__title > div {
+.hero__title > div,
+.expand__title > div {
   padding-bottom: 0.5em;
   margin-bottom: -0.5em;
 }
@@ -354,47 +356,115 @@ body {
   color: #4a4a45;
 }
 
-/* ---- Gallery — part of The Cabin: two images, wide, with parallax ---- */
-.gallery__inner {
-  /* Wider than the cabin text column; breaks out past .cabin__inner's width.
-     margin-top separates it from the copy above; the section's own bottom
-     padding provides the gap to the next section. */
-  max-width: 1760px;
-  margin: var(--space-5) auto 0;
-  display: grid;
-  /* second column a touch wider → cabin-2 is a bit larger */
-  grid-template-columns: 1fr 1.18fr;
-  align-items: center; /* let each item keep its own height */
-  gap: 2.5rem;
+/* ---- Horizontal-scroll gallery (The Cabin) ---- */
+.hgal {
+  /* Full-bleed without a transform, so the sticky pin isn't broken by a
+     transformed ancestor. The calc resolves to -gutter → the viewport edge. */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-top: var(--space-5);
 }
 
-.gallery__item {
-  background: #e6e2da; /* placeholder tone, shows even before an image loads */
-  aspect-ratio: 4 / 3;
+/* Fallback (no-JS / reduced motion / mobile): native horizontal swipe. */
+.hgal__viewport {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.hgal__viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.hgal__track {
+  display: flex;
+  align-items: center;
+  gap: 3vw;
+  padding: 1rem 8vw;
+  width: max-content;
+}
+
+.hgal__item {
+  flex: none;
+  margin: 0;
   overflow: hidden;
+  background: #e6e2da; /* placeholder tone before the image paints */
 }
 
-/* Parallax frame: the media sits taller than the item so it can drift inside */
-.gallery__media {
-  position: relative;
-  top: -15%;
-  width: 100%;
-  height: 130%;
-  will-change: transform;
-}
-
-.gallery__item img {
+.hgal__item img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
+.hgal__item--sm {
+  width: 72vw;
+  height: 44vh;
+}
+
+.hgal__item--lg {
+  width: 86vw;
+  height: 56vh;
+}
+
+/* JS-pinned horizontal scroll (desktop): the viewport sticks full-screen while
+   GSAP pans the track sideways with scroll. */
+.hgal--pinned .hgal__viewport {
+  overflow: hidden;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.hgal--pinned .hgal__track {
+  height: 100vh; /* items centre vertically within the pinned viewport */
+}
+
+.hgal--pinned .hgal__item--sm {
+  width: 32vw;
+  height: 56vh;
+}
+
+.hgal--pinned .hgal__item--lg {
+  width: 44vw;
+  height: 72vh;
+}
+
+/* Large CTA (light section) — generous breathing room above and below */
+.interior__cta {
+  margin: 7rem auto 0;
+  text-align: center;
+}
+
+.cta {
+  display: inline-block;
+  padding: 1.5rem 4rem;
+  border: 1px solid rgba(26, 26, 26, 0.35);
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background-color var(--dur-ui) var(--ease),
+    color var(--dur-ui) var(--ease), border-color var(--dur-ui) var(--ease);
+}
+
+.cta:hover {
+  background: var(--ink);
+  color: var(--light);
+  border-color: var(--ink);
+}
+
 /* ---- "Interior" section ---- */
 .interior {
-  background: #f5f3ef;
-  color: #1a1a1a;
-  padding: 0 var(--gutter) var(--section-y);
+  background: var(--light);
+  color: var(--ink);
+  /* No bottom padding: the CTA's top margin sets the rhythm above it, and the
+     gap below it to the fjord photo comes from the expand section's own top
+     space — keeping numbers → CTA → photo evenly spaced. */
+  padding: 0 var(--gutter);
 }
 
 .interior__inner {
@@ -464,10 +534,161 @@ body {
   color: #4a4a45;
 }
 
+/* ---- "Why choose" block (end of Interior): value prop + guest stats ---- */
+.why {
+  margin-top: 7rem;
+}
+
+.why__intro {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: start;
+}
+
+.why__title {
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-weight: 300;
+  font-size: clamp(2.2rem, 4.4vw, 3.6rem);
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  max-width: 12ch;
+}
+
+.why__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 48ch;
+  font-weight: 300;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: #4a4a45;
+}
+
+.why__tagline {
+  color: var(--ink);
+  font-weight: 400;
+}
+
+.why__stats {
+  margin-top: var(--space-5);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+.why__stat {
+  padding: 1.75rem;
+  border: 1px solid rgba(26, 26, 26, 0.12);
+}
+
+.why__num {
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-weight: 300;
+  font-size: clamp(2rem, 4.4vw, 3.6rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.why__unit {
+  font-size: 0.5em;
+  letter-spacing: 0.02em;
+  color: #8a8276;
+}
+
+.why__label {
+  margin-top: 0.9rem;
+  font-weight: 300;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: #8a8276;
+}
+
+/* ---- "Expand" — fjord image grows to full-bleed on scroll ---- */
+.expand {
+  position: relative;
+  background: var(--light); /* light surround while the image is still constrained */
+}
+
+.expand__pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: var(--section-y) 0; /* spacing for the no-JS / non-pinned fallback */
+}
+
+.expand__frame {
+  /* Initial constrained state — a centred, content-width frame. */
+  width: min(var(--content), calc(100vw - 2 * var(--gutter)));
+  height: 65vh;
+  flex: none;
+  overflow: hidden;
+}
+
+.expand__frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Dark veil that fades in over the held full-bleed photo, dissolving it into
+   the dark Location section for a seamless handoff. */
+.expand__veil {
+  position: absolute;
+  inset: 0;
+  /* Just the bottom edge is fully opaque to hide the seam into Location; it
+     fades up quickly so there's no big dark band under the photo. */
+  background: linear-gradient(
+    to top,
+    var(--dark) 0%,
+    var(--dark) 12%,
+    transparent 58%
+  );
+  opacity: 0;
+  pointer-events: none;
+}
+
+.expand__caption {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--gutter);
+  text-align: center;
+  color: var(--cream); /* light text on the dark fjord photo — no shadow, by design */
+  pointer-events: none;
+}
+
+.expand__title {
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-weight: 300;
+  font-size: clamp(2.4rem, 5vw, 4.4rem);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  max-width: 16ch;
+}
+
+/* JS drives the pin + scale: give the section scroll distance and pin the frame. */
+.js .expand {
+  height: 280vh;
+}
+
+.js .expand__pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 0;
+}
+
 /* ---- "Location" section (dark) ---- */
 .location {
   background: var(--dark);
-  color: #edeae0;
+  color: var(--cream);
   padding: var(--section-y) 0;
 }
 
@@ -510,31 +731,86 @@ body {
   color: #9c988b;
 }
 
-/* ---- Location image (matches the text component's width) ---- */
-.location__image {
-  max-width: var(--content);
-  margin: var(--space-5) auto 0;
-  padding: 0 var(--gutter);
+/* ---- Location feature: specs (left) + outline drawing (right, full-bleed) ---- */
+.loc-feature {
+  position: relative;
+  overflow: hidden; /* clip the parallax overshoot past the right edge */
+  min-height: 66vh;
+  margin-top: var(--space-5);
+  /* Left edge aligns with the centred text; no right padding → image to the edge */
+  padding-left: max(
+    var(--gutter),
+    calc((100vw - var(--content)) / 2 + var(--gutter))
+  );
+  display: flex;
+  align-items: center;
 }
 
-/* Clip the image so its reveal scale never bleeds into the gutter */
-.location__frame {
-  overflow: hidden;
+.loc-feature__data {
+  position: relative;
+  z-index: 2; /* above the drawing */
+  flex: none;
+  width: min(40%, 20rem);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
-.location__image img {
+.loc-data__group {
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  font-size: 0.75rem;
+  color: #8a8578;
+  margin-bottom: var(--space-1);
+}
+
+.loc-data__list {
+  margin: 0;
+}
+
+.loc-data__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid rgba(237, 234, 224, 0.12);
+}
+
+.loc-data__row dt {
+  font-weight: 300;
+  font-size: 0.95rem;
+  color: #9c988b;
+}
+
+.loc-data__row dd {
+  margin: 0;
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-weight: 300;
+  font-size: 0.95rem;
+  color: var(--cream);
+}
+
+.loc-feature__media {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.loc-feature__media img {
   display: block;
-  width: 100%;
-  height: 65vh;
-  max-height: 640px;
-  object-fit: cover;
-  /* sharp corners, consistent with the rest of the site */
+  height: 60vh;
+  width: auto;
 }
 
 /* ---- "Book" section (continues the dark block from Location) ---- */
 .book {
   background: var(--dark);
-  color: #edeae0;
+  color: var(--cream);
   /* Follower of Location: the top gap comes from Location's bottom padding,
      so the dark block keeps the same single section rhythm as the light one. */
   padding: 0 var(--gutter) 64px;
@@ -567,7 +843,7 @@ body {
   padding: 1rem 2.25rem;
   border: 1px solid rgba(237, 234, 224, 0.55);
   background: transparent;
-  color: #edeae0;
+  color: var(--cream);
   font-size: 0.78rem;
   font-weight: 400;
   letter-spacing: 0.22em;
@@ -578,9 +854,9 @@ body {
 }
 
 .book__btn:hover {
-  background: #edeae0;
+  background: var(--cream);
   color: var(--dark);
-  border-color: #edeae0;
+  border-color: var(--cream);
 }
 
 .book__direct {
@@ -599,7 +875,7 @@ body {
 }
 
 .book__direct a:hover {
-  color: #edeae0;
+  color: var(--cream);
 }
 
 /* ---- Footer ---- */
@@ -622,7 +898,7 @@ body {
   font-weight: 400;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: #edeae0;
+  color: var(--cream);
   text-decoration: none;
 }
 
@@ -644,7 +920,7 @@ body {
 }
 
 .footer__links a:hover {
-  color: #edeae0;
+  color: var(--cream);
 }
 
 .footer__meta {
@@ -673,13 +949,28 @@ body {
     margin-top: 3rem;
   }
 
-  .location__image {
-    margin-top: var(--space-4); /* smaller gap before the image on tablet */
+  /* Stack the feature: specs, then the image full-width below (no bleed/parallax) */
+  .loc-feature {
+    display: block;
+    min-height: 0;
+    overflow: visible;
+    padding-left: var(--gutter);
+    padding-right: var(--gutter);
   }
 
-  .location__image img {
-    height: 48vh;
-    max-height: 420px;
+  .loc-feature__data {
+    width: auto;
+  }
+
+  .loc-feature__media {
+    position: static;
+    margin-top: var(--space-4);
+    display: block;
+  }
+
+  .loc-feature__media img {
+    width: 100%;
+    height: auto;
   }
 
   .cabin__cols {
@@ -697,13 +988,27 @@ body {
   .row--reverse .row__media {
     order: 0;
   }
+
+  .why__intro {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .why__stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 640px) {
   /* Section vertical padding and gutters already shrink via the :root tokens. */
-  .gallery__inner {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
+  .interior__cta {
+    margin: 5rem auto 0;
+  }
+
+  .cta {
+    padding: 1.1rem 2.25rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
   }
 
   .book {
@@ -784,7 +1089,7 @@ body {
   align-items: center;
   justify-content: center;
   background: var(--dark);
-  color: #edeae0;
+  color: var(--cream);
 }
 
 .js .preloader {
@@ -829,7 +1134,7 @@ body {
   bottom: 0;
   width: 100%;
   height: 2px;
-  background: #edeae0;
+  background: var(--cream);
   transform: scaleX(0);
   transform-origin: left;
 }

@@ -51,12 +51,29 @@ nav?.querySelectorAll(".nav__menu a").forEach((link) => {
         if (lenis) {
           lenis.scrollTo(target, { offset: 0 });
         } else {
-          target.scrollIntoView({ behavior: "smooth", block: "start" });
+          // lenis is only null under reduced motion → jump, don't animate.
+          target.scrollIntoView({ behavior: "auto", block: "start" });
         }
       }
     }
     nav.classList.remove("is-open");
     toggle?.setAttribute("aria-expanded", "false");
+  });
+});
+
+// ---- Placeholder & home links ----
+// Bare "#" links (wordmarks, CTAs with no destination yet) must not jump the
+// page to the top via the default hash navigation. The wordmarks scroll home
+// smoothly instead; the placeholder CTAs simply do nothing.
+document.querySelectorAll('a[href="#"]').forEach((a) => {
+  const isWordmark =
+    a.classList.contains("nav__wordmark") ||
+    a.classList.contains("footer__wordmark");
+  a.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (!isWordmark) return;
+    if (lenis) lenis.scrollTo(0);
+    else window.scrollTo({ top: 0, behavior: "auto" });
   });
 });
 
@@ -138,7 +155,11 @@ const revealGroups = [
   { root: ".cabin__inner", items: ".cabin__eyebrow, .cabin__lede, .cabin__cols" },
   { root: ".interior__head", items: ".cabin__eyebrow" },
   { root: ".row", items: ".row__text" },
+  { root: ".why__intro", items: ".why__title, .why__text" },
+  { root: ".why__stats", items: ".why__stat" },
+  { root: ".interior__cta", items: ".cta" },
   { root: ".location__inner", items: ".cabin__eyebrow, .location__lede, .location__stats" },
+  { root: ".loc-feature__data", items: ".loc-data" },
   { root: ".book__inner", items: ".cabin__eyebrow, .book__lede, .book__btn, .book__direct" },
 ];
 
@@ -212,9 +233,7 @@ function initHeadingMasks() {
 function initImageReveals() {
   if (prefersReducedMotion) return; // CSS media query shows them, no motion
 
-  const frames = gsap.utils.toArray(
-    ".gallery__item, .row__media, .location__frame"
-  );
+  const frames = gsap.utils.toArray(".row__media");
 
   if (noIO) {
     frames.forEach((f) => f.querySelector("img")?.classList.add("is-revealed"));
@@ -293,8 +312,9 @@ function setupHeroParallax() {
       },
       defaults: { ease: "none" },
     })
-    .fromTo(hero, { y: 0 }, { y: -150 }, 0)
-    .to(hero, { opacity: 0 }, 0.6); // fade out over the final stretch
+    // Gentle drift — just a subtle lift, not a big slide.
+    .fromTo(hero, { y: 0 }, { y: -30 }, 0)
+    .to(hero, { opacity: 0 }, 0.75); // fade out only over the final stretch
 }
 
 setupHeroParallax();
@@ -335,7 +355,7 @@ function setupCursor() {
   // Tag the elements that get a labelled cursor — the images route to booking,
   // so they read "Book". (The CTA button keeps the plain dot, no label/ring.)
   document
-    .querySelectorAll(".gallery__item, .row__media, .location__frame")
+    .querySelectorAll(".row__media, .hgal__item")
     .forEach((el) => (el.dataset.cursor = "Book"));
 
   // Labelled targets (the images).
@@ -352,7 +372,11 @@ function setupCursor() {
   // Plain links / buttons → ring. The CTA button is excluded so it keeps the
   // plain dot (no ring, no label).
   document.querySelectorAll("a, button").forEach((el) => {
-    if (el.hasAttribute("data-cursor") || el.classList.contains("book__btn")) {
+    if (
+      el.hasAttribute("data-cursor") ||
+      el.classList.contains("book__btn") ||
+      el.classList.contains("cta")
+    ) {
       return;
     }
     el.addEventListener("mouseenter", () =>
@@ -382,10 +406,11 @@ function setupImageBooking() {
   if (!target) return;
   const goToBook = () => {
     if (lenis) lenis.scrollTo(target, { offset: 0 });
-    else target.scrollIntoView({ behavior: "smooth", block: "start" });
+    // lenis is only null under reduced motion → jump, don't animate.
+    else target.scrollIntoView({ behavior: "auto", block: "start" });
   };
   document
-    .querySelectorAll(".gallery__item, .row__media, .location__frame")
+    .querySelectorAll(".row__media, .hgal__item")
     .forEach((el) => {
       el.style.cursor = "pointer";
       el.addEventListener("click", goToBook);
@@ -407,6 +432,7 @@ function setupSmartNav() {
     { sel: "#scrub", theme: "dark", href: null },
     { sel: ".cabin", theme: "light", href: "#cabin" },
     { sel: ".interior", theme: "light", href: "#interior" },
+    { sel: ".expand", theme: "dark", href: null },
     { sel: ".location", theme: "dark", href: "#location" },
     { sel: ".book", theme: "dark", href: "#book" },
   ];
@@ -491,37 +517,177 @@ function setupBgTransitions() {
   };
 
   morph(".cabin", dark, light); // hero (dark) → The Cabin (light)
-  morph(".location", light, dark); // Interior (light) → Location (dark)
+  // (No morph into Location: the expand image hands off to the dark section
+  //  directly, and scrubbing Location's background caused a visible flash.)
 }
 
 setupBgTransitions();
 
-// ---- Gallery parallax ----
-// Both gallery images drift gently (and in opposite directions) inside their
-// frames as the gallery passes through the viewport.
-function setupGalleryParallax() {
-  if (prefersReducedMotion) return;
-  const medias = gsap.utils.toArray(".gallery__media");
-  medias.forEach((media, i) => {
-    const from = i === 0 ? 10 : -8;
-    gsap.fromTo(
-      media,
-      { yPercent: from },
-      {
-        yPercent: -from,
+// ---- The Cabin: horizontal-scroll gallery ----
+// The strip pins full-screen mid-scroll and pans sideways through all five
+// images, then releases back into normal vertical scroll. The section's height
+// is stretched to exactly the horizontal travel so scroll maps 1:1 to the pan.
+// Mobile / reduced motion keep the CSS native-swipe fallback (no pin).
+function setupHGallery() {
+  const hgal = document.querySelector(".hgal");
+  if (!hgal) return;
+  const track = hgal.querySelector(".hgal__track");
+  if (!track) return;
+
+  // gsap.matchMedia builds the pin above the breakpoint and, when you resize
+  // below it (or into reduced motion), tears it down and reverts the pan to 0 —
+  // so crossing the breakpoint live swaps cleanly between pinned pan and the
+  // CSS native-swipe fallback, no reload needed.
+  const mm = gsap.matchMedia();
+  mm.add(
+    "(min-width: 861px) and (prefers-reduced-motion: no-preference)",
+    () => {
+      hgal.classList.add("hgal--pinned");
+
+      const amount = () => Math.max(0, track.scrollWidth - window.innerWidth);
+      const setHeight = () => {
+        hgal.style.height = window.innerHeight + amount() + "px";
+      };
+      setHeight();
+      // Keep the section height and pan distance in sync on every refresh/resize.
+      ScrollTrigger.addEventListener("refreshInit", setHeight);
+
+      gsap.to(track, {
+        x: () => -amount(),
         ease: "none",
         scrollTrigger: {
-          trigger: ".gallery__inner",
-          start: "top bottom",
-          end: "bottom top",
+          trigger: hgal,
+          start: "top top",
+          end: "bottom bottom",
           scrub: true,
+          invalidateOnRefresh: true,
         },
-      }
-    );
+      });
+
+      // Cleanup when the query stops matching. matchMedia auto-reverts the tween
+      // and its ScrollTrigger (resetting the pan); we undo the non-gsap bits.
+      return () => {
+        ScrollTrigger.removeEventListener("refreshInit", setHeight);
+        hgal.classList.remove("hgal--pinned");
+        hgal.style.height = "";
+      };
+    }
+  );
+}
+
+setupHGallery();
+
+// ---- Location feature: outline drawing drifts in from the right ----
+// The house drawing sits flush to the right edge and drifts gently leftward
+// (from just off the edge toward centre) as the block scrolls through. Desktop
+// only; matchMedia reverts the drift below the breakpoint / for reduced motion.
+function setupLocationFeature() {
+  const media = document.querySelector(".loc-feature__media");
+  if (!media) return;
+  gsap.matchMedia().add(
+    "(min-width: 861px) and (prefers-reduced-motion: no-preference)",
+    () => {
+      gsap.fromTo(
+        media,
+        { xPercent: 4 },
+        {
+          xPercent: -1,
+          ease: "none",
+          scrollTrigger: {
+            trigger: ".loc-feature",
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true,
+          },
+        }
+      );
+    }
+  );
+}
+
+setupLocationFeature();
+
+// ---- Expand: fjord image grows to full-bleed ----
+// The fjord photo starts constrained (like a normal section image), then — as
+// its tall section scrolls through a pinned viewport — scales out to full-bleed
+// (100vw × 100vh) while a caption fades in over it, before handing off to the
+// dark Location section below. Reduced motion skips the pin/scale and just shows
+// the full-bleed end state.
+function setupExpand() {
+  const section = document.querySelector(".expand");
+  if (!section) return;
+  const frame = section.querySelector(".expand__frame");
+  const veil = section.querySelector(".expand__veil");
+  const title = section.querySelector(".expand__title");
+  if (!frame) return;
+
+  if (prefersReducedMotion) {
+    gsap.set(frame, { width: "100vw", height: "100vh" });
+    gsap.set(title, { opacity: 1 });
+    section.style.height = "100vh"; // collapse the scroll track — no scrub
+    return;
+  }
+
+  // Grow to full-bleed over the first ~60% of the track, then hold full-screen
+  // for the remainder (the trailing empty tween keeps the timeline mapped 0→1).
+  gsap
+    .timeline({
+      scrollTrigger: {
+        trigger: section,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: true,
+        invalidateOnRefresh: true, // recompute the 100vw/100vh targets on resize
+      },
+      defaults: { ease: "none" },
+    })
+    // Grow to full-bleed early (~45%), then hold the clean photo for a long
+    // stretch before the veil starts — a deliberate pause on the fjord.
+    .to(frame, { width: "100vw", height: "100vh", duration: 0.45 }, 0)
+    .to(frame, { duration: 0.55 }, 0.45)
+    // Dissolve into darkness: the veil only starts late (80%) and ramps to full
+    // by the end, so the photo melts seamlessly into the dark Location below.
+    .fromTo(veil, { opacity: 0 }, { opacity: 1, duration: 0.2 }, 0.8);
+
+  // Title uses the same line-mask move as the other headings — with autoSplit
+  // so a resize re-splits the lines correctly (matching initHeadingMasks). The
+  // paused reveal tween is rebuilt on every (re)split, seeded with the current
+  // state, and toggled by scroll position so it plays in when the photo is
+  // full-bleed and reverses back out when you scroll up past it.
+  let reveal = null;
+  let shown = false;
+  SplitText.create(title, {
+    type: "lines",
+    mask: "lines",
+    autoSplit: true,
+    onSplit: (self) => {
+      gsap.set(title, { opacity: 1 }); // undo the .js anti-flash hide
+      gsap.set(self.lines, { yPercent: 170 }); // parked below the clip
+      reveal = gsap.to(self.lines, {
+        yPercent: 0,
+        duration: 0.9,
+        ease: REVEAL.ease,
+        stagger: 0.12,
+        paused: true,
+      });
+      if (shown) reveal.progress(1); // keep the revealed state across re-splits
+      return reveal; // returned → SplitText reverts it before re-splitting
+    },
+  });
+  ScrollTrigger.create({
+    trigger: section,
+    start: "top top",
+    end: "bottom bottom",
+    onUpdate: (self) => {
+      shown = self.progress >= 0.45;
+      if (!reveal) return;
+      if (shown) reveal.play();
+      else reveal.reverse();
+    },
   });
 }
 
-setupGalleryParallax();
+setupExpand();
 
 // ---- Intro preloader ----
 // Counts up while the page settles, then lifts away and hands off to the hero

@@ -1,11 +1,13 @@
 {
-  "name": "hero-scrub",
+  "name": "nordic-cabin",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "Scroll-driven landing page for a minimalist off-grid cabin above a Norwegian fjord.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:pages": "vite build --base=/nordic-cabin/",
     "preview": "vite preview"
   },
   "dependencies": {
