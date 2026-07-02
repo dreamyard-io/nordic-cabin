@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Mark JS available before paint so the hero can pre-hide (anti-flash)
+         without ever hiding content when JavaScript is disabled. -->
+    <script>
+      document.documentElement.classList.add("js");
+    </script>
+    <title>Nordic Cabin</title>
+    <meta
+      name="description"
+      content="Nordic Cabin — a minimalist, off-grid retreat above a quiet Norwegian fjord, available for short stays."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230d1218'/%3E%3Cpath d='M6 20 16 9 26 20' fill='none' stroke='%23edeae0' stroke-width='2'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&family=Space+Grotesk:wght@300;400&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" crossorigin src="/nordic-cabin/assets/index-CgyBQCrV.js"></script>
+    <link rel="stylesheet" crossorigin href="/nordic-cabin/assets/index-B461dyhA.css">
+  </head>
+  <body>
+    <!-- Intro preloader (shown only with JS; counts up, then lifts away) -->
+    <div class="preloader" aria-hidden="true">
+      <span class="preloader__word">Nordic Cabin</span>
+      <span class="preloader__count">0</span>
+      <span class="preloader__bar"></span>
+    </div>
+
+    <!-- Fixed, persistent top navigation (smart: hides on scroll, inverts per section) -->
+    <nav class="nav">
+      <a class="nav__wordmark" href="#">Nordic Cabin</a>
+
+      <button
+        class="nav__toggle"
+        type="button"
+        aria-label="Menu"
+        aria-expanded="false"
+        aria-controls="nav-menu"
+      >
+        <span></span>
+        <span></span>
+      </button>
+
+      <ul class="nav__menu" id="nav-menu">
+        <li><a href="#cabin">The Cabin</a></li>
+        <li><a href="#interior">Interier</a></li>
+        <li><a href="#location">Location</a></li>
+        <li><a href="#book">Book</a></li>
+      </ul>
+    </nav>
+
+    <section class="scrub" id="scrub">
+      <div class="sticky">
+        <video
+          id="hero"
+          src="/nordic-cabin/hero_scrub.mp4"
+          poster="/nordic-cabin/hero-poster.jpg"
+          muted
+          playsinline
+          preload="auto"
+        ></video>
+
+        <!-- Gradient scrims for legibility over light/dark video phases -->
+        <div class="scrim scrim--top"></div>
+        <div class="scrim scrim--bottom"></div>
+
+        <!-- (2 + 3) Hero heading and paragraph -->
+        <div class="hero">
+          <h1 class="hero__title">Stillness,<br />off the grid</h1>
+          <p class="hero__lede">
+            A minimalist cabin above the fjord, where the only schedule is the
+            light. Norwegian solitude, designed to disappear into the landscape.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Normal-flow section below the sticky scroll section -->
+    <section class="cabin" id="cabin">
+      <div class="cabin__inner">
+        <p class="cabin__eyebrow">The Cabin</p>
+        <h2 class="cabin__title">Built for the landscape, not against it</h2>
+        <p class="cabin__lede">
+          Nordic Cabin is a study in restraint — a single-story timber structure
+          that sits lightly on the rock, framing the fjord through
+          floor-to-ceiling glass. Everything unnecessary has been removed,
+          leaving only space, light, and silence.
+        </p>
+
+        <div class="cabin__cols">
+          <div class="cabin__col">
+            <h3>Materials</h3>
+            <p>
+              Pale spruce cladding, blackened steel roof, concrete plinth.
+              Natural, untreated, built to weather.
+            </p>
+          </div>
+          <div class="cabin__col">
+            <h3>Footprint</h3>
+            <p>
+              64 m² of considered space. One open living volume, two bedrooms,
+              one bathroom. Nothing more.
+            </p>
+          </div>
+          <div class="cabin__col">
+            <h3>Off-grid</h3>
+            <p>
+              Solar power, rainwater collection, wood-burning heat. Independent
+              by design.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gallery — part of The Cabin: horizontal-scroll strip that pins mid-page
+           and pans sideways through 5 images (alternating small / large). Falls
+           back to native horizontal swipe on mobile / reduced motion. -->
+      <div class="hgal">
+        <div class="hgal__viewport">
+          <div class="hgal__track">
+            <figure class="hgal__item hgal__item--sm">
+              <img
+                src="/nordic-cabin/cabin-1.png"
+                alt="Nordic Cabin exterior"
+                loading="lazy"
+                decoding="async"
+              />
+            </figure>
+            <figure class="hgal__item hgal__item--lg">
+              <img
+                src="/nordic-cabin/cabin-2.png"
+                alt="Nordic Cabin interior"
+                loading="lazy"
+                decoding="async"
+              />
+            </figure>
+            <figure class="hgal__item hgal__item--sm">
+              <img
+              src="/nordic-cabin/detail-kitchen.png"
+              alt="The kitchen"
+              loading="lazy"
+              decoding="async"
+            />
+            </figure>
+            <figure class="hgal__item hgal__item--lg">
+              <img
+              src="/nordic-cabin/detail-bedroom.png"
+              alt="The bedroom"
+              loading="lazy"
+              decoding="async"
+            />
+            </figure>
+            <figure class="hgal__item hgal__item--sm">
+              <img
+              src="/nordic-cabin/detail-living.png"
+              alt="The living room"
+              loading="lazy"
+              decoding="async"
+            />
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interior — alternating image/text rows -->
+    <section class="interior" id="interior">
+      <div class="interior__inner">
+        <header class="interior__head">
+          <p class="cabin__eyebrow">Interier</p>
+          <h2 class="cabin__title">In the details, nothing shouts</h2>
+        </header>
+
+        <div class="row">
+          <div class="row__media">
+            <img
+              src="/nordic-cabin/detail-kitchen.png"
+              alt="The kitchen"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div class="row__text">
+            <p class="cabin__eyebrow">The Kitchen</p>
+            <h3 class="row__title">Made to be used, not noticed</h3>
+            <p class="row__body">
+              Handleless spruce cabinetry and a honed concrete counter, lit by
+              the morning through a single window. Everything within reach,
+              nothing in the way.
+            </p>
+          </div>
+        </div>
+
+        <div class="row row--reverse">
+          <div class="row__media">
+            <img
+              src="/nordic-cabin/detail-bedroom.png"
+              alt="The bedroom"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div class="row__text">
+            <p class="cabin__eyebrow">The Bedroom</p>
+            <h3 class="row__title">Where the day winds down</h3>
+            <p class="row__body">
+              Linen in soft, undyed tones against pale timber walls. A reading
+              light, a few books, and the quiet of the forest just beyond the
+              glass.
+            </p>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row__media">
+            <img
+              src="/nordic-cabin/detail-living.png"
+              alt="The living room"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div class="row__text">
+            <p class="cabin__eyebrow">The Living Room</p>
+            <h3 class="row__title">Warmth you can hear</h3>
+            <p class="row__body">
+              A cast-iron stove, a stack of birch, a wool throw on a concrete
+              ledge. When the light fades, this is where the cabin gathers.
+            </p>
+          </div>
+        </div>
+
+        <!-- Why choose — value proposition + guest stats -->
+        <div class="why">
+          <div class="why__intro">
+            <h2 class="why__title">Why choose Nordic Cabin?</h2>
+            <div class="why__text">
+              <p>
+                Nordic Cabin is a single retreat above a quiet fjord in western
+                Norway — open to the light, and yours for as long as you stay.
+              </p>
+              <p>
+                Off the grid, but never without comfort. Solar power, a
+                wood-burning stove, and rainwater on tap. Everything you need to
+                slip away for a few days, and nothing you don't.
+              </p>
+              <p class="why__tagline">Easy to reach. Hard to leave.</p>
+            </div>
+          </div>
+
+          <div class="why__stats">
+            <div class="why__stat">
+              <p class="why__num">4+2</p>
+              <p class="why__label">Beds — two bedrooms + sofa</p>
+            </div>
+            <div class="why__stat">
+              <p class="why__num">64 <span class="why__unit">m²</span></p>
+              <p class="why__label">Total floor area</p>
+            </div>
+            <div class="why__stat">
+              <p class="why__num">40 <span class="why__unit">min</span></p>
+              <p class="why__label">To the nearest village</p>
+            </div>
+            <div class="why__stat">
+              <p class="why__num">100 <span class="why__unit">%</span></p>
+              <p class="why__label">Off the grid</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Large CTA closing the Interior section -->
+      <div class="interior__cta">
+        <a class="cta" href="#">Check Availability</a>
+      </div>
+    </section>
+
+    <!-- Expand — the fjord image grows to full-bleed on scroll, then hands off to Location -->
+    <section class="expand" aria-label="The setting">
+      <div class="expand__pin">
+        <div class="expand__frame">
+          <img
+            src="/nordic-cabin/fjord.png"
+            alt="Nordic Cabin on a granite shelf above the fjord"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+        <div class="expand__veil"></div>
+        <div class="expand__caption">
+          <h2 class="expand__title">Where the light never quite leaves</h2>
+        </div>
+      </div>
+    </section>
+
+    <!-- Location — dark section: copy, stats, and the house data + outline drawing -->
+    <section class="location" id="location">
+      <div class="location__inner">
+        <p class="cabin__eyebrow">Location</p>
+        <h2 class="cabin__title">Far enough to forget the world</h2>
+        <p class="location__lede">
+          Set on a granite shelf above a quiet fjord in western Norway,
+          reachable by a single gravel track. No neighbours, no noise — only
+          water, forest, and weather.
+        </p>
+
+        <div class="location__stats">
+          <div class="loc-stat">
+            <span class="loc-stat__num">61°N</span>
+            <p class="loc-stat__label">
+              Deep in the Norwegian fjordland, where summer light lingers past
+              midnight.
+            </p>
+          </div>
+          <div class="loc-stat">
+            <span class="loc-stat__num">40 min</span>
+            <p class="loc-stat__label">
+              To the nearest village. The last stretch is gravel, and that's
+              the point.
+            </p>
+          </div>
+          <div class="loc-stat">
+            <span class="loc-stat__num">320 m</span>
+            <p class="loc-stat__label">
+              Above sea level, on bedrock that's been here since the last ice
+              age.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data + outline drawing: specs on the left, the house image bleeding to
+           the right edge and drifting in from the right on scroll -->
+      <div class="loc-feature">
+        <div class="loc-feature__data">
+          <div class="loc-data">
+            <p class="loc-data__group">The house</p>
+            <dl class="loc-data__list">
+              <div class="loc-data__row"><dt>Floor area</dt><dd>64 m²</dd></div>
+              <div class="loc-data__row"><dt>Sleeps</dt><dd>4 + 2</dd></div>
+              <div class="loc-data__row"><dt>Structure</dt><dd>Spruce &amp; glass</dd></div>
+              <div class="loc-data__row"><dt>Power</dt><dd>100% off-grid</dd></div>
+            </dl>
+          </div>
+          <div class="loc-data">
+            <p class="loc-data__group">The location</p>
+            <dl class="loc-data__list">
+              <div class="loc-data__row"><dt>Latitude</dt><dd>61° N</dd></div>
+              <div class="loc-data__row"><dt>Elevation</dt><dd>320 m</dd></div>
+              <div class="loc-data__row"><dt>Nearest village</dt><dd>40 min</dd></div>
+            </dl>
+          </div>
+        </div>
+        <div class="loc-feature__media">
+          <img
+            src="/nordic-cabin/cabin-outline.png"
+            alt="Line drawing of the cabin"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- Book — same dark block as Location, centered CTA -->
+    <section class="book" id="book">
+      <div class="book__inner">
+        <p class="cabin__eyebrow">Book</p>
+        <h2 class="cabin__title book__title">Come for the silence</h2>
+        <p class="book__lede">
+          Nordic Cabin sleeps four, with room for two more on the sofa by the
+          fire. Available spring through late autumn, when the fjord is at its
+          calmest.
+        </p>
+        <a class="book__btn" href="#">Check availability</a>
+        <p class="book__direct">
+          Or write to us directly —
+          <a href="mailto:hello@nordiccabin.no">hello@nordiccabin.no</a>
+        </p>
+      </div>
+
+      <footer class="footer">
+        <div class="footer__top">
+          <a class="footer__wordmark" href="#">Nordic Cabin</a>
+          <p class="footer__meta">Western Norway · 60.8731° N, 6.4521° E</p>
+          <nav class="footer__links">
+            <a href="#">Privacy Policy</a>
+          </nav>
+        </div>
+        <p class="footer__copy">© 2026 Nordic Cabin</p>
+      </footer>
+    </section>
+
+    <!-- Film grain overlay (fixed, above everything, non-interactive) -->
+    <div class="grain" aria-hidden="true"></div>
+
+  </body>
+</html>
