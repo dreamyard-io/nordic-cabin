@@ -66,6 +66,27 @@ const video = document.getElementById("hero");
 video.pause();
 video.removeAttribute("autoplay");
 
+// iOS/Safari won't paint frames from currentTime seeking on a video that has
+// never played — it stays black. A brief muted play "primes" the decoder so the
+// scrub renders; the poster covers the page until then. Only touch devices need
+// this (desktop seeks natively), so it's gated to avoid a playback flicker there.
+if (window.matchMedia("(hover: none), (pointer: coarse)").matches) {
+  const primeVideo = () => {
+    const p = video.play();
+    if (p && typeof p.then === "function") {
+      p.then(() => video.pause()).catch(() => {});
+    } else {
+      try {
+        video.pause();
+      } catch (e) {}
+    }
+  };
+  video.addEventListener("canplay", primeVideo, { once: true });
+  ["touchstart", "pointerdown"].forEach((ev) =>
+    window.addEventListener(ev, primeVideo, { once: true, passive: true })
+  );
+}
+
 // We need the metadata (duration) before we can map scroll -> currentTime.
 function setupScrub() {
   const duration = video.duration;
